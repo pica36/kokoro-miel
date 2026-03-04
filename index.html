@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心ミエル - LINE本音透視AI</title>
+    <style>
+        :root { --accent: #d1c4e9; --gold: #ffd700; --bg: #0a0a0c; --card: #16161a; --border: #2a2a2e; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg); color: #eee; margin: 0; padding: 15px; line-height: 1.6; }
+        .container { max-width: 450px; margin: auto; }
+        
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        
+        /* タイトル画面 */
+        .title-logo { text-align: center; margin: 50px 0 30px; }
+        .title-logo h1 { font-weight: 200; letter-spacing: 12px; color: var(--accent); font-size: 2.2rem; margin: 0; text-shadow: 0 0 10px rgba(209,196,233,0.3); }
+        .target-manager { margin-top: 40px; }
+        .slot { background: #111; border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .slot.locked { opacity: 0.5; border-style: dashed; }
+        .slot-name { font-weight: bold; font-size: 0.9rem; }
+        .slot-status { font-size: 0.7rem; color: var(--gold); }
+
+        /* カード・質問 */
+        .card { background: var(--card); border-radius: 24px; padding: 25px; border: 1px solid var(--border); position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+        .q-label { font-size: 0.7rem; color: var(--gold); margin-bottom: 5px; display: block; letter-spacing: 1px; }
+        .q-text { font-size: 1.1rem; margin-bottom: 20px; display: block; font-weight: 600; line-height: 1.4; }
+        .option-list { display: grid; gap: 10px; }
+        .option-btn { background: #1a1a1f; border: 1px solid var(--border); color: #ccc; padding: 16px; border-radius: 12px; text-align: left; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
+        .option-btn:active { background: rgba(209, 196, 233, 0.1); transform: scale(0.98); }
+
+        /* ナビゲーション */
+        .nav-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 0.95rem; transition: 0.3s; }
+        .btn-primary { background: linear-gradient(45deg, #ffd700, #ff9900); color: #111; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2); }
+        .btn-back { background: #333; color: #eee; }
+        
+        .progress-container { width: 100%; height: 4px; background: #222; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: 0.3s; }
+
+        /* フッター */
+        .footer { text-align: center; margin-top: 40px; font-size: 0.7rem; color: #555; }
+        .footer a { color: #555; text-decoration: none; border-bottom: 1px solid #555; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="view-title" class="view-section active">
+        <div class="title-logo">
+            <h1>心ミエル</h1>
+            <p style="color:#666; font-size:0.8rem; letter-spacing:2px; margin-top:5px;">STRATEGIC ANALYTICS</p>
+        </div>
+        
+        <button class="btn btn-primary" onclick="showView('view-gateway')" style="width:100%; padding:20px; font-size:1.1rem;">新しい相手を分析する</button>
+        
+        <div class="target-manager">
+            <p style="font-size:0.75rem; color:#888; margin-bottom:10px;">ターゲット履歴管理</p>
+            <div class="slot">
+                <span class="slot-name">自分の基本データ</span>
+                <span class="slot-status" style="color:var(--accent);">保存済</span>
+            </div>
+            <div class="slot locked">
+                <span class="slot-name">ターゲット 1 (Premium)</span>
+                <span class="slot-status">🔒</span>
+            </div>
+            <div class="slot locked">
+                <span class="slot-name">ターゲット 2 (Premium)</span>
+                <span class="slot-status">🔒</span>
+            </div>
+            <div class="slot locked">
+                <span class="slot-name">ターゲット 3 (Premium)</span>
+                <span class="slot-status">🔒</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <a href="#">プライバシーポリシー / 利用規約</a><br><br>
+            &copy; 2026 Kokoro Miel
+        </div>
+    </div>
+
+    <div id="view-gateway" class="view-section">
+        <div class="card">
+            <span class="q-label">STEP 0: 分析の前提</span>
+            <span class="q-text">お二人の基本情報を教えてください</span>
+            <div class="option-list">
+                <label style="font-size:0.75rem; color:#888;">あなたの性別</label>
+                <select id="user-gender" class="option-btn" style="width:100%; appearance:none;"><option>男性</option><option>女性</option><option>その他</option></select>
+                <label style="font-size:0.75rem; color:#888; margin-top:10px;">相手との現在の関係</label>
+                <select id="relation" class="option-btn" style="width:100%; appearance:none;"><option>友人</option><option>職場・仕事</option><option>マッチングアプリ</option><option>恋人未満</option><option>復縁希望</option><option>メル友・SNS</option></select>
+            </div>
+            <div class="nav-btns">
+                <button class="btn btn-back" onclick="showView('view-title')">タイトルへ</button>
+                <button class="btn btn-primary" onclick="startQuiz()">診断へ進む</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-quiz" class="view-section">
+        <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+        <div class="card">
+            <span id="q-category" class="q-label"></span>
+            <span id="q-text" class="q-text"></span>
+            <div id="q-options" class="option-list"></div>
+            <div class="nav-btns" style="margin-top:25px;">
+                <button class="btn btn-back" onclick="prevQuestion()">1問戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-upload" class="view-section">
+        <div class="card">
+            <span class="q-label">LAST STEP</span>
+            <span class="q-text">エビデンスの提出</span>
+            <p style="font-size:0.85rem; color:#aaa; line-height:1.5;">最新のやり取りが写っているLINEのスクリーンショットを1枚アップロードしてください。</p>
+            <input type="file" id="file-input" accept="image/*" class="option-btn" style="width:90%; margin:20px 0;">
+            <div class="nav-btns">
+                <button class="btn btn-back" onclick="showView('view-quiz')">戻る</button>
+                <button class="btn btn-primary" onclick="processAnalysis()">本音を透視する</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-analyzing" class="view-section">
+        <div class="card" style="text-align: center; padding: 60px 20px;">
+            <div style="font-size: 3rem; margin-bottom: 20px; animation: pulse 1.5s infinite;">🔍</div>
+            <h3 style="color:var(--gold);">深層心理をモデリング中...</h3>
+            <p style="color:#888; font-size:0.85rem;">画像データと30の回答を照合しています。<br>画面を閉じずにお待ちください。</p>
+        </div>
+    </div>
+
+    <div id="view-report" class="view-section">
+        <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <div class="card" style="flex: 1; text-align: center; padding: 15px;">
+                <span style="font-size: 0.7rem; color: var(--gold); font-weight: bold;">LINE相性</span>
+                <span id="res-score-line" style="display: block; font-size: 2.2rem; font-weight: bold; color: #fff;">--</span>
+            </div>
+            <div class="card" style="flex: 1; text-align: center; padding: 15px; border-color: var(--accent);">
+                <span style="font-size: 0.7rem; color: var(--accent); font-weight: bold;">成約期待値</span>
+                <span id="res-score-real" style="display: block; font-size: 2.2rem; font-weight: bold; color: var(--accent);">--</span>
+            </div>
+        </div>
+        <div class="card">
+            <div id="report-html-content" style="font-size: 0.95rem; color:#ddd; line-height:1.6;"></div>
+            <button class="btn btn-primary" style="margin-top:30px; width:100%;" onclick="alert('Premium版で解放されます')">返信テンプレを見る 🔒</button>
+            <button class="btn btn-back" style="margin-top:15px; width:100%; background:transparent; border:1px solid #444;" onclick="location.reload()">タイトルに戻る</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        // あなたの属性
+        { cat: "あなたの属性", q: "見た目の系統は？", opts: ["清楚系", "真面目・誠実系", "ギャル・チャラめ系", "オタク・サブカル系", "普通", "分からない"] },
+        { cat: "あなたの属性", q: "普段のファッションは？", opts: ["キレイ目", "カジュアル", "ストリート", "服に興味なし・無頓着", "分からない"] },
+        { cat: "あなたの属性", q: "話し方の特徴は？", opts: ["早口", "ゆっくり", "普通", "静か", "分からない"] },
+        { cat: "あなたの属性", q: "美容やケアへの投資度は？", opts: ["かなり高い", "標準", "あまりしていない", "分からない"] },
+        { cat: "あなたの属性", q: "恋愛経験値はどのくらい？", opts: ["未経験", "1〜2人", "3〜5人", "10人以上", "教えたくない"] },
+        { cat: "あなたの属性", q: "自身の性格タイプは？", opts: ["明るい・社交的", "落ち着いている", "人見知り", "慎重派", "分からない"] },
+        { cat: "あなたの属性", q: "LINEの返信スピードは？", opts: ["即レス派", "数時間以内", "1日以上あける", "気分による"] },
+        { cat: "あなたの属性", q: "実際に会った時の態度は？", opts: ["緊張でうまく話せない", "LINE時と変わらない", "まだ会っていない"] },
+        { cat: "あなたの属性", q: "話題を振る頻度はどちらが多い？", opts: ["自分が多い", "相手が多い", "半々", "分からない"] },
+        { cat: "あなたの属性", q: "相手のプライベートをどの程度知っている？", opts: ["よく知っている", "いくつか知っている", "ほとんど知らない", "聞ける雰囲気ではない"] },
+
+        // 相手の属性
+        { cat: "相手の属性", q: "相手の見た目系統は？", opts: ["清楚系", "真面目系", "ギャル系", "オタク・個性派", "派手め", "分からない"] },
+        { cat: "相手の属性", q: "相手の今日の雰囲気・服装は？", opts: ["大人っぽい・上品", "トレンド・流行", "シンプル・地味", "個性的・派手", "分からない"] },
+        { cat: "相手の属性", q: "相手の話し方は？", opts: ["早口", "ゆっくり", "普通", "静か", "分からない"] },
+        { cat: "相手の属性", q: "相手の美容・自分磨き意識は？", opts: ["かなり高い", "標準", "低そう", "分からない"] },
+        { cat: "相手の属性", q: "相手の社会的性格は？", opts: ["陽キャ（誰にでも明るい）", "陰キャ（狭く深く）", "優等生（誰にでも丁寧）", "分からない"] },
+        { cat: "相手の属性", q: "相手の普段のLINE量は？", opts: ["誰にでもマメ", "事務連絡のみ", "人によって激しい", "分からない"] },
+        { cat: "相手の属性", q: "相手からの連絡頻度は？", opts: ["しょっちゅう来る", "たまに来る", "向こうからは来ない", "分からない"] },
+        { cat: "相手の属性", q: "出会いのきっかけは？", opts: ["職場・学校", "アプリ", "趣味・飲み会", "その他", "分からない"] },
+        { cat: "相手の属性", q: "直接会った回数は？", opts: ["0回", "1〜2回", "3回以上", "頻繁"] },
+        { cat: "相手の属性", q: "よく使う絵文字の傾向は？", opts: ["ハート系", "笑い・笑顔系", "定番系", "基本使わない", "分からない"] },
+
+        // 二人の関係性（深層）
+        { cat: "関係性の深層", q: "LINEでの呼び方に変化はあった？", opts: ["親密になった", "変わらない", "他人行儀になった", "分からない"] },
+        { cat: "関係性の深層", q: "相手から「相談」をされたことは？", opts: ["よくある", "一度もない", "忘れた"] },
+        { cat: "関係性の深層", q: "相手の「弱み」を見せられたことは？", opts: ["ある", "ない", "分からない"] },
+        { cat: "関係性の深層", q: "既読から返信までの間隔は？", opts: ["すぐ付いてすぐ来る", "既読から時間がかかる", "未読が長い", "まばら"] },
+        { cat: "関係性の深層", q: "あなたの言葉を真似（ミラーリング）してくる？", opts: ["よくある", "全くない", "気にしていない"] },
+        { cat: "関係性の深層", q: "話題の主導権はどちら？", opts: ["常に相手", "常に自分", "五分五分", "分からない"] },
+        { cat: "関係性の深層", q: "デートの誘いへの反応は？", opts: ["具体的な案が出る", "はぐらかされる", "誘っていない", "分からない"] },
+        { cat: "関係性の深層", q: "二人だけの「内輪ネタ」はある？", opts: ["ある", "ない", "分からない"] },
+        { cat: "関係性の深層", q: "相手に言われて嬉しかった言葉はある？", opts: ["ある", "ない", "思い出せない"] },
+        { cat: "関係性の深層", q: "ライバルの存在を感じる？", opts: ["確実にいる", "いそう", "全く感じない", "分からない"] }
+    ];
+
+    let currentQ = 0;
+    let quizAnswers = [];
+
+    function showView(id) {
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startQuiz() { 
+        currentQ = 0; 
+        showView('view-quiz'); 
+        renderQuestion(); 
+    }
+
+    function renderQuestion() {
+        const q = questions[currentQ];
+        document.getElementById('q-category').innerText = `QUESTION ${currentQ + 1} / 30: ${q.cat}`;
+        document.getElementById('q-text').innerText = q.q;
+        const container = document.getElementById('q-options');
+        container.innerHTML = '';
+        
+        q.opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => nextQuestion(opt);
+            container.appendChild(btn);
+        });
+        
+        document.getElementById('progress-bar').style.width = `${((currentQ + 1) / questions.length) * 100}%`;
+    }
+
+    function nextQuestion(ans) {
+        quizAnswers[currentQ] = ans;
+        if (currentQ < questions.length - 1) {
+            currentQ++;
+            renderQuestion();
+        } else {
+            showView('view-upload');
+        }
+    }
+
+    function prevQuestion() {
+        if (currentQ > 0) {
+            currentQ--;
+            renderQuestion();
+        } else {
+            showView('view-gateway');
+        }
+    }
+
+    async function processAnalysis() {
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        if (!file) { alert("画像をアップロードしてください"); return; }
+        
+        showView('view-analyzing');
+
+        try {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            
+            reader.onload = async () => {
+                const base64Data = reader.result.split(',')[1];
+                const mimeType = file.type;
+                
+                let answersText = "【ユーザーからの回答】\n";
+                questions.forEach((q, i) => {
+                    answersText += `Q${i+1}: ${quizAnswers[i] || '未回答'}\n`;
+                });
+                answersText += "\n上記の回答と添付したLINEのスクリーンショットを分析し、相手の心理状態と今後の最適なアプローチを教えてください。";
+
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        promptText: answersText,
+                        base64Data: base64Data,
+                        mimeType: mimeType
+                    })
+                });
+
+                if (!response.ok) throw new Error("通信エラー");
+
+                const data = await response.json();
+                const aiText = data.candidates[0].content.parts[0].text;
+                
+                document.getElementById('res-score-line').innerText = "AI";
+                document.getElementById('res-score-real').innerText = "分析完了";
+                document.getElementById('report-html-content').innerText = aiText;
+                
+                showView('view-report');
+            };
+        } catch (error) {
+            console.error(error);
+            alert("エラーが発生しました。もう一度お試しください。");
+            showView('view-upload');
+        }
+    }
+</script>
+
+<style>
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
+</body>
+</html>
