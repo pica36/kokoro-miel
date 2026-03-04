@@ -3,195 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>心ミエル - LINE本音透視AI</title>
+    <title>Kokoro Miel | LINE本音透視AI</title>
     <style>
-        :root { --accent: #d1c4e9; --gold: #ffd700; --bg: #0a0a0c; --card: #16161a; --border: #2a2a2e; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg); color: #eee; margin: 0; padding: 15px; line-height: 1.6; }
-        .container { max-width: 450px; margin: auto; }
-        
-        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        :root { --gold: #d4af37; --accent: #ff4081; --bg: #0f0f0f; }
+        body { font-family: sans-serif; background: var(--bg); color: #ddd; margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 500px; margin: 0 auto; }
+        .card { background: #1a1a1a; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; }
+        .btn { display: inline-block; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; }
+        .btn-primary { background: linear-gradient(135deg, var(--gold), #b8860b); color: #000; }
+        .option-btn { background: #222; color: #fff; border: 1px solid #444; padding: 12px; margin-bottom: 10px; border-radius: 8px; text-align: left; width: 100%; cursor: pointer; }
+        .option-btn:hover { border-color: var(--gold); background: #2a2a2a; }
+        .view-section { display: none; }
         .view-section.active { display: block; }
-        
-        /* タイトル画面 */
-        .title-logo { text-align: center; margin: 50px 0 30px; }
-        .title-logo h1 { font-weight: 200; letter-spacing: 12px; color: var(--accent); font-size: 2.2rem; margin: 0; text-shadow: 0 0 10px rgba(209,196,233,0.3); }
-        .target-manager { margin-top: 40px; }
-        .slot { background: #111; border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-        .slot.locked { opacity: 0.5; border-style: dashed; }
-        .slot-name { font-weight: bold; font-size: 0.9rem; }
-        .slot-status { font-size: 0.7rem; color: var(--gold); }
-
-        /* カード・質問 */
-        .card { background: var(--card); border-radius: 24px; padding: 25px; border: 1px solid var(--border); position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-        .q-label { font-size: 0.7rem; color: var(--gold); margin-bottom: 5px; display: block; letter-spacing: 1px; }
-        .q-text { font-size: 1.1rem; margin-bottom: 20px; display: block; font-weight: 600; line-height: 1.4; }
-        .option-list { display: grid; gap: 10px; }
-        .option-btn { background: #1a1a1f; border: 1px solid var(--border); color: #ccc; padding: 16px; border-radius: 12px; text-align: left; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
-        .option-btn:active { background: rgba(209, 196, 233, 0.1); transform: scale(0.98); }
-
-        /* ナビゲーション */
-        .nav-btns { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { flex: 1; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 0.95rem; transition: 0.3s; }
-        .btn-primary { background: linear-gradient(45deg, #ffd700, #ff9900); color: #111; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2); }
-        .btn-back { background: #333; color: #eee; }
-        
-        .progress-container { width: 100%; height: 4px; background: #222; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: 0.3s; }
-
-        /* フッター */
-        .footer { text-align: center; margin-top: 40px; font-size: 0.7rem; color: #555; }
-        .footer a { color: #555; text-decoration: none; border-bottom: 1px solid #555; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #progress-bar { height: 4px; background: var(--gold); width: 0%; transition: width 0.3s; margin-bottom: 20px; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+        .loading-pulse { animation: pulse 1.5s infinite; text-align: center; margin: 40px 0; color: var(--gold); }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <div id="view-title" class="view-section active">
-        <div class="title-logo">
-            <h1>心ミエル</h1>
-            <p style="color:#666; font-size:0.8rem; letter-spacing:2px; margin-top:5px;">STRATEGIC ANALYTICS</p>
-        </div>
-        
-        <button class="btn btn-primary" onclick="showView('view-gateway')" style="width:100%; padding:20px; font-size:1.1rem;">新しい相手を分析する</button>
-        
-        <div class="target-manager">
-            <p style="font-size:0.75rem; color:#888; margin-bottom:10px;">ターゲット履歴管理</p>
-            <div class="slot">
-                <span class="slot-name">自分の基本データ</span>
-                <span class="slot-status" style="color:var(--accent);">保存済</span>
-            </div>
-            <div class="slot locked">
-                <span class="slot-name">ターゲット 1 (Premium)</span>
-                <span class="slot-status">🔒</span>
-            </div>
-            <div class="slot locked">
-                <span class="slot-name">ターゲット 2 (Premium)</span>
-                <span class="slot-status">🔒</span>
-            </div>
-            <div class="slot locked">
-                <span class="slot-name">ターゲット 3 (Premium)</span>
-                <span class="slot-status">🔒</span>
-            </div>
-        </div>
 
-            </div>
-
-    <div id="view-gateway" class="view-section">
-        <div class="card">
-            <span class="q-label">STEP 0: 分析の前提</span>
-            <span class="q-text">お二人の基本情報を教えてください</span>
-            <div class="option-list">
-                <label style="font-size:0.75rem; color:#888;">あなたの性別</label>
-                <select id="user-gender" class="option-btn" style="width:100%; appearance:none;"><option>男性</option><option>女性</option><option>その他</option></select>
-                <label style="font-size:0.75rem; color:#888; margin-top:10px;">相手との現在の関係</label>
-                <select id="relation" class="option-btn" style="width:100%; appearance:none;"><option>友人</option><option>職場同僚・クラスメイト</option><option>マッチングアプリ</option><option>恋人未満</option><option>恋人</option><option>メル友・SNS</option><option>仕事先・お店の店員</option></select>
-            </div>
-            <div class="nav-btns">
-                <button class="btn btn-back" onclick="showView('view-title')">タイトルへ</button>
-                <button class="btn btn-primary" onclick="startQuiz()">診断へ進む</button>
+    <div id="view-home" class="view-section active">
+        <div class="card" style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color:var(--gold); margin-bottom:10px;">心ミエル</h2>
+            <p style="font-size:0.85rem; color:#888;">AIがLINEから深層心理を暴きます</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <button class="btn btn-primary" style="font-size: 1.2rem;" onclick="startQuiz()">相手を分析する ➔</button>
+            <div style="margin-top: 25px; padding: 15px; border: 1px solid #333; border-radius: 12px; background: rgba(255,255,255,0.02);">
+                <p style="font-size: 0.7rem; color: var(--gold); margin-bottom: 12px; font-weight: bold;">✨ 新しい出会いを探すなら ✨</p>
+                <a href="#" target="_blank" style="text-decoration:none; display:block; background:#00bcd4; color:#fff; padding:10px; border-radius:8px; font-size:0.85rem; font-weight:bold; margin-bottom:10px;">Pairs（ペアーズ）で探す</a>
+                <a href="#" target="_blank" style="text-decoration:none; display:block; background:#ff4081; color:#fff; padding:10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">タップルで探す</a>
             </div>
         </div>
     </div>
 
     <div id="view-quiz" class="view-section">
-        <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
+        <div id="progress-bar"></div>
         <div class="card">
-            <span id="q-category" class="q-label"></span>
-            <span id="q-text" class="q-text"></span>
-            <div id="q-options" class="option-list"></div>
-            <div class="nav-btns" style="margin-top:25px;">
-                <button class="btn btn-back" onclick="prevQuestion()">1問戻る</button>
-            </div>
+            <p id="q-category" style="font-size:0.7rem; color:var(--gold); font-weight:bold;"></p>
+            <h3 id="q-text" style="margin: 10px 0 20px 0; font-size:1.1rem;"></h3>
+            <div id="q-options"></div>
+            <button class="btn" style="margin-top:20px; background:transparent; border:1px solid #444; color:#888;" onclick="prevQuestion()">前へ戻る</button>
         </div>
     </div>
 
     <div id="view-upload" class="view-section">
         <div class="card">
-            <span class="q-label">LAST STEP</span>
-            <span class="q-text">エビデンスの提出</span>
-            <p style="font-size:0.85rem; color:#aaa; line-height:1.5;">最新のやり取りが写っているLINEのスクリーンショットを1枚アップロードしてください。</p>
-            <input type="file" id="file-input" accept="image/*" class="option-btn" style="width:90%; margin:20px 0;">
-            <div class="nav-btns">
-                <button class="btn btn-back" onclick="showView('view-quiz')">戻る</button>
-                <button class="btn btn-primary" onclick="processAnalysis()">本音を透視する</button>
-            </div>
+            <h3 style="color:var(--gold); font-size:1rem; margin-bottom:15px;">LINEのスクショを選択</h3>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:15px;">※AIがトークの流れから本音を分析します</p>
+            <input type="file" id="file-input" accept="image/*" style="width:100%; margin-bottom:20px; color:#fff;">
+            <button class="btn btn-primary" onclick="processAnalysis()">AI分析を開始する ➔</button>
         </div>
     </div>
 
-  <div id="view-analyzing" class="view-section">
-        <div class="card" style="text-align: center; padding: 40px 20px;">
-            <div style="font-size: 3rem; margin-bottom: 15px; animation: pulse 1.5s infinite;">🔍</div>
-            <h3 style="color:var(--gold);">深層心理をモデリング中...</h3>
-            <p style="color:#888; font-size:0.85rem; margin-bottom: 25px;">画像データと30の回答を照合しています。<br>画面を閉じずにお待ちください。</p>
-
-            <div style="background: rgba(255,215,0,0.05); padding: 15px; border-radius: 10px; border: 1px dashed var(--gold); max-width:320px; margin: 0 auto; text-align: left;">
-                <p style="font-size:0.8rem; color:var(--gold); margin-bottom:12px; text-align:center; font-weight:bold;">📚 モテたい方におすすめの著書</p>
-                <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <a href="https://www.amazon.co.jp/dp/B0FP3PR9V9" target="_blank" style="text-decoration:none; display:flex; align-items:center; background:rgba(255,255,255,0.08); padding:10px; border-radius:8px; border:1px solid #444;">
-                        <img src="https://m.media-amazon.com/images/P/B0FP3PR9V9.01.LZZZZZZZ.jpg" style="width:55px; height:auto; border-radius:3px; margin-right:12px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);">
-                        <div>
-                            <div style="color:#fff; font-size:0.8rem; font-weight:bold; line-height:1.3;">7割の人はモテない</div>
-                            <div style="color:var(--gold); font-size:0.65rem; margin-top:6px;">Amazonで詳細を見る ➔</div>
-                        </div>
-                    </a>
-                    <a href="https://www.amazon.co.jp/dp/B0FK8X7WV7" target="_blank" style="text-decoration:none; display:flex; align-items:center; background:rgba(255,255,255,0.08); padding:10px; border-radius:8px; border:1px solid #444;">
-                        <img src="https://m.media-amazon.com/images/P/B0FK8X7WV7.01.LZZZZZZZ.jpg" style="width:55px; height:auto; border-radius:3px; margin-right:12px; box-shadow: 2px 2px 5px rgba(0,0,0,0.5);">
-                        <div>
-                            <div style="color:#fff; font-size:0.8rem; font-weight:bold; line-height:1.3;">なぜあのヒトは『ダメ男』ばかりと付き合うのか？</div>
-                            <div style="color:var(--gold); font-size:0.65rem; margin-top:6px;">Amazonで詳細を見る ➔</div>
-                        </div>
-                    </a>
-                </div>
+    <div id="view-analyzing" class="view-section">
+        <div class="card" style="text-align: center;">
+            <div class="loading-pulse"><h2>AI 透視中...</h2></div>
+            <div style="margin-top: 30px; border-top: 1px dashed #444; padding-top: 20px;">
+                <p style="font-size:0.75rem; color:#888; margin-bottom:10px;">待ち時間にチェック！おすすめの著書</p>
+                <a href="https://www.amazon.co.jp/dp/B0FP3PR9V9" target="_blank" style="text-decoration:none; display:flex; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                    <img src="https://m.media-amazon.com/images/P/B0FP3PR9V9.01.LZZZZZZZ.jpg" style="width:40px; height:auto; margin-right:10px;">
+                    <div style="color:#fff; font-size:0.8rem; font-weight:bold; text-align:left;">7割の人はモテない<br><span style="font-size:0.65rem; color:var(--gold);">Amazonで見る ➔</span></div>
+                </a>
             </div>
         </div>
     </div>
 
     <div id="view-report" class="view-section">
         <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <div class="card" style="flex: 1; text-align: center; padding: 15px;">
-                <span style="font-size: 0.7rem; color: var(--gold); font-weight: bold;">LINE相性</span>
-                <span id="res-score-line" style="display: block; font-size: 2.2rem; font-weight: bold; color: #fff;">--</span>
-            </div>
-            <div class="card" style="flex: 1; text-align: center; padding: 15px; border-color: var(--accent);">
-                <span style="font-size: 0.7rem; color: var(--accent); font-weight: bold;">成約期待値</span>
-                <span id="res-score-real" style="display: block; font-size: 1.2rem; font-weight: bold; color: var(--accent); margin-top:10px;">--</span>
-            </div>
+            <div class="card" style="flex: 1; text-align: center; padding: 15px;"><span style="font-size: 0.7rem; color: var(--gold); font-weight: bold;">LINE相性</span><span id="res-score-line" style="display: block; font-size: 2.2rem; font-weight: bold;">--</span></div>
+            <div class="card" style="flex: 1; text-align: center; padding: 15px; border-color: var(--accent);"><span style="font-size: 0.7rem; color: var(--accent); font-weight: bold;">成約期待値</span><span id="res-score-real" style="display: block; font-size: 1rem; font-weight: bold; margin-top:10px;">--</span></div>
         </div>
-        
-        <div class="card" style="padding: 20px;">
-            <h3 style="color:var(--gold); border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; font-size:1rem;">AI 分析レポート</h3>
-            <div id="report-html-content" style="line-height: 1.6; font-size: 0.9rem; color: #ddd; margin-bottom:25px;">
+        <div style="margin-bottom: 25px; border: 1px solid var(--gold); border-radius: 12px; background: rgba(212, 175, 55, 0.15); padding: 15px; text-align: center;">
+            <a href="https://note.com/gifted_bear281/m/m3fa3253110a0" target="_blank" style="text-decoration:none; display:flex; align-items:center;">
+                <div style="font-size: 1.8rem; margin-right: 15px;">💎</div>
+                <div style="text-align: left;">
+                    <div style="color:#fff; font-size:0.8rem; font-weight:bold; line-height:1.4;">『意識』によるパワーで人生が変わる成功哲学マガジン</div>
+                    <div style="color:var(--gold); font-size:0.65rem; margin-top:6px; font-weight:bold;">成功したい方はこちら ➔</div>
                 </div>
-
-            <div style="margin-top: 30px; border-top: 1px dashed #444; padding-top: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px;">
-                <p style="font-size:0.85rem; color:var(--gold); font-weight:bold; margin-bottom:15px; text-align:center;">✨ さらに恋愛心理を極める ✨</p>
+            </a>
+        </div>
+        <div class="card" style="padding: 20px;">
+            <h3 style="color:var(--gold); border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; font-size:1rem;">徹底分析レポート</h3>
+            <div id="report-html-content" style="line-height: 1.8; font-size: 0.9rem; color: #ddd; white-space: pre-wrap;"></div>
+            <div style="margin-top: 35px; border-top: 1px dashed #444; padding-top: 20px;">
+                <p style="font-size:0.8rem; color:var(--gold); font-weight:bold; margin-bottom:15px; text-align:center;">📚 恋愛心理を極める推薦図書</p>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <a href="https://www.amazon.co.jp/dp/B0FP3PR9V9" target="_blank" style="text-decoration:none; display:flex; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; border:1px solid #333;">
-                        <img src="https://m.media-amazon.com/images/P/B0FP3PR9V9.01.LZZZZZZZ.jpg" style="width:45px; height:auto; border-radius:3px; margin-right:10px;">
-                        <div style="color:#fff; font-size:0.75rem; font-weight:bold;">7割の人はモテない</div>
-                    </a>
-                    <a href="https://www.amazon.co.jp/dp/B0FK8X7WV7" target="_blank" style="text-decoration:none; display:flex; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; border:1px solid #333;">
-                        <img src="https://m.media-amazon.com/images/P/B0FK8X7WV7.01.LZZZZZZZ.jpg" style="width:45px; height:auto; border-radius:3px; margin-right:10px;">
+                    <a href="https://www.amazon.co.jp/dp/B0FK8X7WV7" target="_blank" style="text-decoration:none; display:flex; align-items:center; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                        <img src="https://m.media-amazon.com/images/P/B0FK8X7WV7.01.LZZZZZZZ.jpg" style="width:45px; height:auto; margin-right:12px;">
                         <div style="color:#fff; font-size:0.75rem; font-weight:bold;">なぜあのヒトは『ダメ男』ばかりと付き合うのか？</div>
                     </a>
                 </div>
             </div>
-            <button class="btn btn-primary" style="margin-top:20px; width:100%;" onclick="alert('Premium版で解放されます')">返信テンプレを見る 🔒</button>
-            <button class="btn btn-back" style="margin-top:15px; width:100%; background:transparent; border:1px solid #444;" onclick="location.reload()">タイトルに戻る</button>
+            <button class="btn btn-primary" style="margin-top:25px;" onclick="location.reload()">相手を分析する</button>
         </div>
-    </div></div>
+    </div>
+</div>
+
 <footer style="margin-top:50px; padding:30px; text-align:center; font-size:0.75rem; color:#666; border-top:1px solid #222;">
     <p>&copy; 2026 Kokoro Miel</p>
     <div style="margin-top:15px;">
         <a href="privacy.html" style="color:#888; text-decoration:none; margin:0 10px;">プライバシーポリシー</a>
-       <a href="https://forms.gle/RDiUKfxCcF8uuSJ39" target="_blank" style="color:#888; text-decoration:none; margin:0 10px;">お問い合わせ</a>
+        <a href="https://forms.gle/RDiUKfxCcF8uuSJ39" target="_blank" style="color:#888; text-decoration:none; margin:0 10px;">お問い合わせ</a>
     </div>
 </footer>
+
 <script>
     const questions = [
-        // あなたの属性
         { cat: "あなたの属性", q: "見た目の系統は？", opts: ["清楚系", "真面目・誠実系", "ギャル・チャラめ系", "オタク・サブカル系", "普通", "分からない"] },
         { cat: "あなたの属性", q: "普段のファッションは？", opts: ["キレイ目", "カジュアル", "ストリート", "服に興味なし・無頓着", "分からない"] },
         { cat: "あなたの属性", q: "話し方の特徴は？", opts: ["早口", "ゆっくり", "普通", "静か", "分からない"] },
@@ -202,8 +121,6 @@
         { cat: "あなたの属性", q: "実際に会った時の態度は？", opts: ["緊張でうまく話せない", "LINE時と変わらない", "まだ会っていない"] },
         { cat: "あなたの属性", q: "話題を振る頻度はどちらが多い？", opts: ["自分が多い", "相手が多い", "半々", "分からない"] },
         { cat: "あなたの属性", q: "相手のプライベートをどの程度知っている？", opts: ["よく知っている", "いくつか知っている", "ほとんど知らない", "聞ける雰囲気ではない"] },
-
-        // 相手の属性
         { cat: "相手の属性", q: "相手の見た目系統は？", opts: ["清楚系", "真面目系", "ギャル系", "オタク・個性派", "派手め", "分からない"] },
         { cat: "相手の属性", q: "相手の今日の雰囲気・服装は？", opts: ["大人っぽい・上品", "トレンド・流行", "シンプル・地味", "個性的・派手", "分からない"] },
         { cat: "相手の属性", q: "相手の話し方は？", opts: ["早口", "ゆっくり", "普通", "静か", "分からない"] },
@@ -214,8 +131,6 @@
         { cat: "相手の属性", q: "出会いのきっかけは？", opts: ["職場・学校", "アプリ", "趣味・飲み会", "その他", "分からない"] },
         { cat: "相手の属性", q: "直接会った回数は？", opts: ["0回", "1〜2回", "3回以上", "頻繁"] },
         { cat: "相手の属性", q: "よく使う絵文字の傾向は？", opts: ["ハート系", "笑い・笑顔系", "定番系", "基本使わない", "分からない"] },
-
-        // 二人の関係性（深層）
         { cat: "関係性の深層", q: "LINEでの呼び方に変化はあった？", opts: ["親密になった", "変わらない", "他人行儀になった", "分からない"] },
         { cat: "関係性の深層", q: "相手から「相談」をされたことは？", opts: ["よくある", "一度もない", "忘れた"] },
         { cat: "関係性の深層", q: "相手の「弱み」を見せられたことは？", opts: ["ある", "ない", "分からない"] },
@@ -224,7 +139,7 @@
         { cat: "関係性の深層", q: "話題の主導権はどちら？", opts: ["常に相手", "常に自分", "五分五分", "分からない"] },
         { cat: "関係性の深層", q: "デートの誘いへの反応は？", opts: ["具体的な案が出る", "はぐらかされる", "誘っていない", "分からない"] },
         { cat: "関係性の深層", q: "二人だけの「内輪ネタ」はある？", opts: ["ある", "ない", "分からない"] },
-        { cat: "関係性の深層", q: "相手に言われて嬉しかった言葉はある？", opts: ["ある", "ない", "思い出せない"] },
+        { cat: "関係性の深層", q: "相手に言われて嬉しかった言葉はある？", opts: ["ある", "ない", "思い出せる"] },
         { cat: "関係性の深層", q: "ライバルの存在を感じる？", opts: ["確実にいる", "いそう", "全く感じない", "分からない"] }
     ];
 
@@ -234,13 +149,10 @@
     function showView(id) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+        window.scrollTo(0, 0);
     }
 
-    function startQuiz() { 
-        currentQ = 0; 
-        showView('view-quiz'); 
-        renderQuestion(); 
-    }
+    function startQuiz() { currentQ = 0; showView('view-quiz'); renderQuestion(); }
 
     function renderQuestion() {
         const q = questions[currentQ];
@@ -248,7 +160,6 @@
         document.getElementById('q-text').innerText = q.q;
         const container = document.getElementById('q-options');
         container.innerHTML = '';
-        
         q.opts.forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'option-btn';
@@ -256,27 +167,18 @@
             btn.onclick = () => nextQuestion(opt);
             container.appendChild(btn);
         });
-        
         document.getElementById('progress-bar').style.width = `${((currentQ + 1) / questions.length) * 100}%`;
     }
 
     function nextQuestion(ans) {
         quizAnswers[currentQ] = ans;
-        if (currentQ < questions.length - 1) {
-            currentQ++;
-            renderQuestion();
-        } else {
-            showView('view-upload');
-        }
+        if (currentQ < questions.length - 1) { currentQ++; renderQuestion(); }
+        else { showView('view-upload'); }
     }
 
     function prevQuestion() {
-        if (currentQ > 0) {
-            currentQ--;
-            renderQuestion();
-        } else {
-            showView('view-gateway');
-        }
+        if (currentQ > 0) { currentQ--; renderQuestion(); }
+        else { showView('view-home'); }
     }
 
     async function processAnalysis() {
@@ -285,84 +187,50 @@
         if (!file) { alert("画像をアップロードしてください"); return; }
         
         showView('view-analyzing');
+        const startTime = Date.now();
 
         try {
-            const startTime = Date.now(); //
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            
             reader.onload = async () => {
                 const base64Data = reader.result.split(',')[1];
-                const mimeType = file.type;
-                
-                let answersText = "【ユーザーからの回答】\n";
-                questions.forEach((q, i) => {
-                    answersText += `Q${i+1}: ${quizAnswers[i] || '未回答'}\n`;
-                });
-                
-                // --- ここからAIへの強力な命令（無料版用） ---
-                answersText += `
-\n上記の回答と画像を分析し、以下の【無料版のルール】を絶対に守って結果を出力してください。
+                let answersText = "【ユーザー回答詳細】\n";
+                questions.forEach((q, i) => { answersText += `${q.q}: ${quizAnswers[i]}\n`; });
 
-【無料版のルール】
-1. 分析結果は必ず「5行以内」で簡潔にまとめること。
-2. 全体的な脈あり度は伝えるが、具体的な返信内容やアドバイスは教えないこと。
-3. 回答の最後に必ず「詳細な攻略法はPremium版で！」という一文をそのまま書き加えること。
-`;
-                // ------------------------------------------
+                const systemPrompt = `
+あなたは超一流の恋愛心理アナリストです。提供された画像と回答から、以下の4項目を【合計800文字以上】の圧倒的なボリュームで詳しく分析してください。
+1.【相手の深層心理と本音】 2.【現状の脈あり診断と相性】 3.【逆転・加速させる次の一手】 4.【絶対に避けるべきNG行動】
+※無料とは思えない質と量のレポートを作成してください。`;
 
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        promptText: answersText,
+                        promptText: answersText + "\n\n" + systemPrompt,
                         base64Data: base64Data,
-                        mimeType: mimeType
+                        mimeType: file.type
                     })
                 });
 
                 if (!response.ok) throw new Error("通信エラー");
-
                 const data = await response.json();
                 const aiText = data.candidates[0].content.parts[0].text;
-                
-                // --- ここから点数と星評価の自動計算 ---
-                // 60〜95のランダムな点数を生成（無料版っぽい演出）
-                const randomScore = Math.floor(Math.random() * 36) + 60;
-                
-                // 点数に応じた5段階評価
-                let starRating = "★★★☆☆ (普通 (・_・))";
-                if (randomScore >= 80) starRating = "★★★★☆ (良好 (*^^*))";
-                if (randomScore >= 90) starRating = "★★★★★ (最高! (≧∇≦))";
-                if (randomScore < 70) starRating = "★★☆☆☆ (注意 (;_;))";
 
-                document.getElementById('res-score-line').innerText = randomScore;
-                document.getElementById('res-score-real').innerText = starRating;
-                // --------------------------------
-
+                // スコア演出
+                const score = Math.floor(Math.random() * 36) + 60;
+                document.getElementById('res-score-line').innerText = score;
+                document.getElementById('res-score-real').innerText = score >= 85 ? "★★★★★ (最高!)" : "★★★★☆ (良好)";
                 document.getElementById('report-html-content').innerText = aiText;
-                
-                // ★8秒未満なら、8秒になるまで待ってから結果画面を出す
-                const elapsedTime = Date.now() - startTime; 
-                const waitTime = Math.max(0, 5000 - elapsedTime);
 
-                setTimeout(() => {
-                    showView('view-report');
-                }, waitTime);
+                const elapsedTime = Date.now() - startTime;
+                const waitTime = Math.max(0, 8000 - elapsedTime);
+                setTimeout(() => { showView('view-report'); }, waitTime);
             };
         } catch (error) {
-            console.error(error);
-            alert("エラーが発生しました。もう一度お試しください。");
+            alert("エラーが発生しました。");
             showView('view-upload');
         }
-    }</script>
-
-<style>
-    @keyframes pulse {
-        0% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.1); opacity: 0.7; }
-        100% { transform: scale(1); opacity: 1; }
     }
-</style>
+</script>
 </body>
 </html>
