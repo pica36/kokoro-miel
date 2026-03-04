@@ -90,7 +90,7 @@
                 <label style="font-size:0.75rem; color:#888;">あなたの性別</label>
                 <select id="user-gender" class="option-btn" style="width:100%; appearance:none;"><option>男性</option><option>女性</option><option>その他</option></select>
                 <label style="font-size:0.75rem; color:#888; margin-top:10px;">相手との現在の関係</label>
-                <select id="relation" class="option-btn" style="width:100%; appearance:none;"><option>友人</option><option>職場・仕事</option><option>マッチングアプリ</option><option>恋人未満</option><option>復縁希望</option><option>メル友・SNS</option></select>
+                <select id="relation" class="option-btn" style="width:100%; appearance:none;"><option>友人</option><option>職場同僚・クラスメイト</option><option>マッチングアプリ</option><option>恋人未満</option><option>恋人</option><option>メル友・SNS</option><option>仕事先・お店の店員</option></select>
             </div>
             <div class="nav-btns">
                 <button class="btn btn-back" onclick="showView('view-title')">タイトルへ</button>
@@ -260,7 +260,17 @@
                 questions.forEach((q, i) => {
                     answersText += `Q${i+1}: ${quizAnswers[i] || '未回答'}\n`;
                 });
-                answersText += "\n上記の回答と添付したLINEのスクリーンショットを分析し、相手の心理状態と今後の最適なアプローチを教えてください。";
+                
+                // --- ここからAIへの強力な命令（無料版用） ---
+                answersText += `
+\n上記の回答と画像を分析し、以下の【無料版のルール】を絶対に守って結果を出力してください。
+
+【無料版のルール】
+1. 分析結果は必ず「5行以内」で簡潔にまとめること。
+2. 全体的な脈あり度は伝えるが、具体的な返信内容やアドバイスは教えないこと。
+3. 回答の最後に必ず「詳細な攻略法はPremium版で！」という一文をそのまま書き加えること。
+`;
+                // ------------------------------------------
 
                 const response = await fetch('/api/analyze', {
                     method: 'POST',
@@ -277,8 +287,20 @@
                 const data = await response.json();
                 const aiText = data.candidates[0].content.parts[0].text;
                 
-                document.getElementById('res-score-line').innerText = "AI";
-                document.getElementById('res-score-real').innerText = "分析完了";
+                // --- ここから点数と星評価の自動計算 ---
+                // 60〜95のランダムな点数を生成（無料版っぽい演出）
+                const randomScore = Math.floor(Math.random() * 36) + 60;
+                
+                // 点数に応じた5段階評価
+                let starRating = "★★★☆☆ (普通 (・_・))";
+                if (randomScore >= 80) starRating = "★★★★☆ (良好 (*^^*))";
+                if (randomScore >= 90) starRating = "★★★★★ (最高! (≧∇≦))";
+                if (randomScore < 70) starRating = "★★☆☆☆ (注意 (;_;))";
+
+                document.getElementById('res-score-line').innerText = randomScore;
+                document.getElementById('res-score-real').innerText = starRating;
+                // --------------------------------
+
                 document.getElementById('report-html-content').innerText = aiText;
                 
                 showView('view-report');
@@ -288,8 +310,7 @@
             alert("エラーが発生しました。もう一度お試しください。");
             showView('view-upload');
         }
-    }
-</script>
+    }</script>
 
 <style>
     @keyframes pulse {
