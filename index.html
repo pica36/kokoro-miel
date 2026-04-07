@@ -185,51 +185,60 @@
     }
 
     async function processAnalysis() {
-        const fileInput = document.getElementById('file-input');
-        const file = fileInput.files[0];
-        if (!file) { alert("画像をアップロードしてください"); return; }
-        
-        showView('view-analyzing');
-        const startTime = Date.now();
+    const fileInput = document.getElementById('file-input');
+    const file = fileInput.files[0];
+    if (!file) { alert("画像をアップロードしてください"); return; }
+    
+    showView('view-analyzing');
+    const startTime = Date.now();
 
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    reader.onload = async () => {
         try {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64Data = reader.result.split(',')[1];
-                let answersText = "【ユーザー回答詳細】\n";
-                questions.forEach((q, i) => { answersText += `${q.q}: ${quizAnswers[i]}\n`; });
+            const base64Data = reader.result.split(',')[1];
+            let answersText = "【ユーザー回答詳細】\n";
+            questions.forEach((q, i) => { answersText += `${q.q}: ${quizAnswers[i]}\n`; });
 
-                const systemPrompt = `あなたは超一流の恋愛心理アナリストです。提供された画像と回答から、以下の4項目を【合計800文字以上】の圧倒的なボリュームで詳しく分析してください。1.【相手の深層心理と本音】 2.【現状の脈あり診断と相性】 3.【逆転・加速させる次の一手】 4.【絶対に避けるべきNG行動】`;
+            const systemPrompt = `あなたは超一流の恋愛心理アナリストです。提供された画像と回答から、以下の4項目を【合計800文字以上】の圧倒的なボリュームで詳しく分析してください。1.【相手の深層心理と本音】 2.【現状の脈あり診断と相性】 3.【逆転・加速させる次の一手】 4.【絶対に避けるべきNG行動】`;
 
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        promptText: answersText + "\n\n" + systemPrompt,
-                        base64Data: base64Data,
-                        mimeType: file.type
-                    })
-                });
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    promptText: answersText + "\n\n" + systemPrompt,
+                    base64Data: base64Data,
+                    mimeType: file.type
+                })
+            });
 
-                if (!response.ok) throw new Error("通信エラー");
-                const data = await response.json();
-                const aiText = data.candidates[0].content.parts[0].text;
+            if (!response.ok) throw new Error("通信エラー");
 
-                const score = Math.floor(Math.random() * 36) + 60;
-                document.getElementById('res-score-line').innerText = score;
-                document.getElementById('res-score-real').innerText = score >= 85 ? "★★★★★ (最高!)" : "★★★★☆ (良好)";
-                document.getElementById('report-html-content').innerText = aiText;
+            const data = await response.json();
 
-                const elapsedTime = Date.now() - startTime;
-                const waitTime = Math.max(0, 8000 - elapsedTime);
-                setTimeout(() => { showView('view-report'); }, waitTime);
-            };
+            if (!data.candidates) {
+                throw new Error("AIから正常なデータが返ってきていません");
+            }
+
+            const aiText = data.candidates[0].content.parts[0].text;
+
+            const score = Math.floor(Math.random() * 36) + 60;
+            document.getElementById('res-score-line').innerText = score;
+            document.getElementById('res-score-real').innerText = score >= 85 ? "★★★★★ (最高!)" : "★★★★☆ (良好)";
+            document.getElementById('report-html-content').innerText = aiText;
+
+            const elapsedTime = Date.now() - startTime;
+            const waitTime = Math.max(0, 8000 - elapsedTime);
+            setTimeout(() => { showView('view-report'); }, waitTime);
+
         } catch (error) {
-            alert("エラーが発生しました。");
+            console.error("onloadエラー:", error);
+            alert("エラー: " + error.message);
             showView('view-upload');
         }
-    }
+    };
+}    
 </script>
 </body>
 </html>
