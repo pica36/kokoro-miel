@@ -7,7 +7,7 @@ export default async function handler(req, res) {
 
         if (!apiKey) return res.status(400).json({ error: "APIキーが設定されていません" });
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-preview:generateContent?key=${apiKey}`;
+        https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent
         
         const googleResponse = await fetch(url, {
             method: 'POST',
