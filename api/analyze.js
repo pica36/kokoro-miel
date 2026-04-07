@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -23,22 +22,22 @@ export default async function handler(req, res) {
             })
         });
 
-        // 👇 ここが超重要（エラーをちゃんと出す）
-       if (!googleResponse.ok) {
-    const errorText = await googleResponse.text();
-    console.error("Geminiエラー:", errorText);
-    return res.status(200).json({ error: errorText });
-}
+        if (!googleResponse.ok) {
+            const errorText = await googleResponse.text();
+            console.error("Geminiエラー:", errorText);
+            return res.status(200).json({ error: errorText });
+        }
 
         const data = await googleResponse.json();
 
         if (!data.candidates) {
-            return res.status(500).json({ error: "AI response invalid" });
+            return res.status(200).json({ error: "AI response invalid" });
         }
 
         res.status(200).json(data);
 
     } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
+        console.error("サーバーエラー詳細:", error);
+        res.status(200).json({ error: error.message });
     }
 }
