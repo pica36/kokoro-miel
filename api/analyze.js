@@ -11,8 +11,8 @@ export default async function handler(req, res) {
         // 【重要】ここでVercelの金庫に隠したAPIキーを呼び出します
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // サーバーからGoogle (Gemini) へ安全に通信
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        // サーバーからGoogle (Gemini) へ安全に通信（モデル名を1.5に修正済み）
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
         const googleResponse = await fetch(url, {
             method: 'POST',
