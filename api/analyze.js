@@ -24,10 +24,11 @@ export default async function handler(req, res) {
         });
 
         // 👇 ここが超重要（エラーをちゃんと出す）
-        if (!googleResponse.ok) {
-            const errorText = await googleResponse.text();
-            return res.status(500).json({ error: errorText });
-        }
+       if (!googleResponse.ok) {
+    const errorText = await googleResponse.text();
+    console.error("Geminiエラー:", errorText);
+    return res.status(200).json({ error: errorText });
+}
 
         const data = await googleResponse.json();
 
