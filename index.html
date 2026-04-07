@@ -112,7 +112,6 @@
 </footer>
 
 <script>
-    // --- (以下、スクリプト部分は変更なしですが、一応含めておきます) ---
     const questions = [
         { cat: "あなたの属性", q: "見た目の系統は？", opts: ["清楚系", "真面目・誠実系", "ギャル・チャラめ系", "オタク・サブカル系", "普通", "分からない"] },
         { cat: "あなたの属性", q: "普段のファッションは？", opts: ["キレイ目", "カジュアル", "ストリート", "服に興味なし・無頓着", "分からない"] },
@@ -213,9 +212,12 @@
                 })
             });
 
-            if (!response.ok) throw new Error("通信エラー");
-
             const data = await response.json();
+
+            // 【修正】もしエラーがあれば、その本当の理由を画面にアラートで出すようにしました
+            if (!response.ok) {
+                throw new Error(data.error || "通信エラーが発生しました");
+            }
 
             if (!data.candidates) {
                 throw new Error("AIから正常なデータが返ってきていません");
@@ -234,7 +236,8 @@
 
         } catch (error) {
             console.error("onloadエラー:", error);
-            alert("エラー: " + error.message);
+            // 汎用エラーではなく、本当のエラー理由をアラート表示します
+            alert("エラー詳細: " + error.message); 
             showView('view-upload');
         }
     };
