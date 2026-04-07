@@ -16,28 +16,31 @@ export default async function handler(req, res) {
                 contents: [{ 
                     parts: [
                         { text: promptText }, 
-                        { inline_data: { mime_type: mimeType, data: base64Data } }
+                        // 【修正】アンダーバーを消し、正しい大文字小文字に修正しました
+                        { inlineData: { mimeType: mimeType, data: base64Data } }
                     ] 
                 }]
             })
         });
 
+        // 【修正】Googleからの本当のエラーを画面に返すようにしました
         if (!googleResponse.ok) {
-            const errorText = await googleResponse.text();
-            console.error("Geminiエラー:", errorText);
-            return res.status(200).json({ error: errorText });
+            const errorData = await googleResponse.json().catch(() => null);
+            const errorMessage = errorData?.error?.message || await googleResponse.text();
+            console.error("Geminiエラー詳細:", errorMessage);
+            return res.status(400).json({ error: errorMessage });
         }
 
         const data = await googleResponse.json();
 
         if (!data.candidates) {
-            return res.status(200).json({ error: "AI response invalid" });
+            return res.status(400).json({ error: "AI response invalid" });
         }
 
         res.status(200).json(data);
 
     } catch (error) {
         console.error("サーバーエラー詳細:", error);
-        res.status(200).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 }
