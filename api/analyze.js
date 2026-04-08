@@ -1,37 +1,43 @@
-console.log("🔥 新しいanalyze.js動いてます");
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  console.log("🟢 analyze called");
+  console.log("METHOD:", req.method);
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-    try {
-        const { promptText, base64Data, mimeType } = req.body;
-        const apiKey = process.env.GEMINI_API_KEY;
+  try {
+    console.log("REQ BODY KEYS:", Object.keys(req.body || {}));
+    console.log("REQ BODY SAMPLE:", {
+      promptText: req.body?.promptText?.slice?.(0,200),
+      mimeType: req.body?.mimeType
+    });
 
-        if (!apiKey) return res.status(400).json({ error: "APIキーが設定されていません" });
+    const { promptText, base64Data, mimeType } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(400).json({ error: "APIキーが設定されていません" });
 
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-        
-        const googleResponse = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ 
-                    parts: [
-                        { text: promptText }, 
-                        { inlineData: { mimeType: mimeType, data: base64Data } }
-                    ] 
-                }]
-            })
-        });
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-        const data = await googleResponse.json();
+    const googleResponse = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: promptText },
+            { inlineData: { mimeType: mimeType, data: base64Data } }
+          ]
+        }]
+      })
+    });
 
-        if (!googleResponse.ok) {
-            const msg = data.error?.message || "Google APIエラー";
-            return res.status(googleResponse.status).json({ error: `[API接続失敗] ${msg}` });
-        }
-
-        res.status(200).json(data);
-    } catch (error) {
-        res.status(500).json({ error: "サーバー内部エラー: " + error.message });
+    const data = await googleResponse.json();
+    if (!googleResponse.ok) {
+      console.error("Google API error:", data);
+      return res.status(googleResponse.status).json({ error: `API接続失敗 ${data.error?.message || JSON.stringify(data)}` });
     }
+
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).json({ error: "サーバー内部エラー: " + error.message });
+  }
 }
