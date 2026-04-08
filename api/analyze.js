@@ -7,9 +7,8 @@ export default async function handler(req, res) {
 
         if (!apiKey) return res.status(400).json({ error: "APIキーが設定されていません" });
 
-        // 【修正：2026年最新の安定URL】
-        // v1beta を使い、モデル名を gemini-1.5-flash-latest に変更します
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+        // 【2026年標準】窓口は v1beta、モデルは gemini-3-flash
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`;
         
         const googleResponse = await fetch(url, {
             method: 'POST',
@@ -18,6 +17,7 @@ export default async function handler(req, res) {
                 contents: [{ 
                     parts: [
                         { text: promptText }, 
+                        // inline_data (アンダーバー) が必須
                         { inline_data: { mime_type: mimeType, data: base64Data } }
                     ] 
                 }]
@@ -25,10 +25,10 @@ export default async function handler(req, res) {
         });
 
         const data = await googleResponse.json();
-
-        // もし Google からエラーが返ってきたら、そのままフロントに渡す
+        
+        // Googleからのエラーがあればそのまま返す
         if (data.error) {
-            return res.status(googleResponse.status).json(data);
+            return res.status(googleResponse.status || 500).json(data);
         }
 
         res.status(200).json(data);
