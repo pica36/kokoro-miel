@@ -214,18 +214,22 @@
 
             const data = await response.json();
 
-            // 【修正】もしエラーがあれば、その本当の理由を画面にアラートで出すようにしました
-            if (!response.ok) {
-                throw new Error(data.error || "通信エラーが発生しました");
+            // 1. Google側でエラーが発生している場合
+            if (data.error) {
+                const msg = data.error.message || "不明なAPIエラー";
+                throw new Error("Google APIエラー: " + msg);
             }
 
-            if (!data.candidates) {
-                throw new Error("AIから正常なデータが返ってきていません");
+            // 2. 返答が空っぽ（安全フィルター等）の場合
+            if (!data.candidates || !data.candidates[0].content) {
+                console.error("受信データ異常:", data);
+                throw new Error("AIが回答を作成できませんでした。画像がポリシーに抵触しているか、解析に失敗しました。");
             }
 
+            // 3. 正常に表示
             const aiText = data.candidates[0].content.parts[0].text;
+            const score = Math.floor(Math.random() * 31) + 65; 
 
-            const score = Math.floor(Math.random() * 36) + 60;
             document.getElementById('res-score-line').innerText = score;
             document.getElementById('res-score-real').innerText = score >= 85 ? "★★★★★ (最高!)" : "★★★★☆ (良好)";
             document.getElementById('report-html-content').innerText = aiText;
@@ -235,9 +239,8 @@
             setTimeout(() => { showView('view-report'); }, waitTime);
 
         } catch (error) {
-            console.error("onloadエラー:", error);
-            // 汎用エラーではなく、本当のエラー理由をアラート表示します
-            alert("エラー詳細: " + error.message); 
+            console.error("解析エラー:", error);
+            alert("エラー詳細: " + error.message);
             showView('view-upload');
         }
     };
