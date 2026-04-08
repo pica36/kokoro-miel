@@ -5,8 +5,11 @@ export default async function handler(req, res) {
         const { promptText, base64Data, mimeType } = req.body;
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // 成功実績のある v1beta と、高速な 1.5-flash を使用
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        if (!apiKey) return res.status(400).json({ error: "APIキーが設定されていません" });
+
+        // 【修正：2026年最新の安定URL】
+        // v1beta を使い、モデル名を gemini-1.5-flash-latest に変更します
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
         
         const googleResponse = await fetch(url, {
             method: 'POST',
@@ -15,7 +18,6 @@ export default async function handler(req, res) {
                 contents: [{ 
                     parts: [
                         { text: promptText }, 
-                        // inline_data と mime_type (アンダーバー) が正解です
                         { inline_data: { mime_type: mimeType, data: base64Data } }
                     ] 
                 }]
@@ -23,6 +25,12 @@ export default async function handler(req, res) {
         });
 
         const data = await googleResponse.json();
+
+        // もし Google からエラーが返ってきたら、そのままフロントに渡す
+        if (data.error) {
+            return res.status(googleResponse.status).json(data);
+        }
+
         res.status(200).json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
