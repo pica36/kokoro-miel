@@ -6,7 +6,7 @@ export default async function handler(req, res) {
         const apiKey = process.env.GEMINI_API_KEY;
 
         // 成功実績のある v1beta と、高速な 1.5-flash を使用
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
         const googleResponse = await fetch(url, {
             method: 'POST',
