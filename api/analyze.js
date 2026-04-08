@@ -1,43 +1,30 @@
 export default async function handler(req, res) {
-  console.log("🟢 analyze called");
-  console.log("METHOD:", req.method);
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-  try {
-    console.log("REQ BODY KEYS:", Object.keys(req.body || {}));
-    console.log("REQ BODY SAMPLE:", {
-      promptText: req.body?.promptText?.slice?.(0,200),
-      mimeType: req.body?.mimeType
-    });
+    try {
+        const { promptText, base64Data, mimeType } = req.body;
+        const apiKey = process.env.GEMINI_API_KEY;
 
-    const { promptText, base64Data, mimeType } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.status(400).json({ error: "APIキーが設定されていません" });
+        // 成功実績のある v1beta と、高速な 1.5-flash を使用
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        
+        const googleResponse = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ 
+                    parts: [
+                        { text: promptText }, 
+                        // inline_data と mime_type (アンダーバー) が正解です
+                        { inline_data: { mime_type: mimeType, data: base64Data } }
+                    ] 
+                }]
+            })
+        });
 
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const googleResponse = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: promptText },
-            { inlineData: { mimeType: mimeType, data: base64Data } }
-          ]
-        }]
-      })
-    });
-
-    const data = await googleResponse.json();
-    if (!googleResponse.ok) {
-      console.error("Google API error:", data);
-      return res.status(googleResponse.status).json({ error: `API接続失敗 ${data.error?.message || JSON.stringify(data)}` });
+        const data = await googleResponse.json();
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    res.status(200).json(data);
-  } catch (error) {
-    console.error("Server error:", error);
-    res.status(500).json({ error: "サーバー内部エラー: " + error.message });
-  }
 }
